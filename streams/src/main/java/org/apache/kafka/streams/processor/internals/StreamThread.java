@@ -243,7 +243,7 @@ public class StreamThread extends Thread {
                 streamsMetadataState.onChange(partitionAssignor.getPartitionsByHostState(), partitionAssignor.clusterMetadata());
                 setStateWhenNotInPendingShutdown(State.RUNNING);
             } catch (Throwable t) {
-                if(!(t instanceof CommitFailedException)) {
+                if(!(t.getCause() instanceof CommitFailedException)) {
                     rebalanceException = t;
                 }
                 throw t;
@@ -264,7 +264,7 @@ public class StreamThread extends Thread {
                 // suspend active tasks
                 suspendTasksAndState();
             } catch (Throwable t) {
-                if(!(t instanceof CommitFailedException)) {
+                if(!(t.getCause() instanceof CommitFailedException)) {
                     rebalanceException = t;
                 }
                 throw t;
