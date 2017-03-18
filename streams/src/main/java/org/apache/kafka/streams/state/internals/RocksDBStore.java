@@ -35,6 +35,7 @@ import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.CompactionStyle;
 import org.rocksdb.CompressionType;
 import org.rocksdb.FlushOptions;
+import org.rocksdb.InfoLogLevel;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
@@ -43,6 +44,8 @@ import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -69,8 +72,8 @@ public class RocksDBStore<K, V> implements KeyValueStore<K, V> {
     // TODO: these values should be configurable
     private static final CompressionType COMPRESSION_TYPE = CompressionType.NO_COMPRESSION;
     private static final CompactionStyle COMPACTION_STYLE = CompactionStyle.UNIVERSAL;
-    private static final long WRITE_BUFFER_SIZE = 32 * 1024 * 1024L;
-    private static final long BLOCK_CACHE_SIZE = 100 * 1024 * 1024L;
+    private static final long WRITE_BUFFER_SIZE = 16 * 1024 * 1024L;
+    private static final long BLOCK_CACHE_SIZE = 50 * 1024 * 1024L;
     private static final long BLOCK_SIZE = 4096L;
     private static final int TTL_SECONDS = TTL_NOT_USED;
     private static final int MAX_WRITE_BUFFERS = 3;
@@ -120,6 +123,11 @@ public class RocksDBStore<K, V> implements KeyValueStore<K, V> {
         options.setMaxWriteBufferNumber(MAX_WRITE_BUFFERS);
         options.setCreateIfMissing(true);
         options.setErrorIfExists(false);
+        options.setInfoLogLevel(InfoLogLevel.ERROR_LEVEL);
+        // this is the recommended way to increase parallelism in RocksDb
+        // note that the current implementation increases the number of compaction threads
+        // but not flush threads.
+        options.setIncreaseParallelism(Runtime.getRuntime().availableProcessors());
 
         wOptions = new WriteOptions();
         wOptions.setDisableWAL(true);
